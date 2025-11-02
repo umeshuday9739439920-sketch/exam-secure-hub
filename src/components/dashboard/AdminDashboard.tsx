@@ -32,9 +32,25 @@ const AdminDashboard = ({ user }: { user: User }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Verify admin access server-side by attempting to fetch admin-only data
+    verifyAdminAccess();
     loadExams();
     loadStats();
   }, []);
+
+  const verifyAdminAccess = async () => {
+    // Attempt to fetch data that only admins can access
+    // If this fails due to RLS, user is not an admin
+    const { error } = await supabase
+      .from("user_roles")
+      .select("id")
+      .limit(1);
+
+    if (error) {
+      toast.error("Access denied. Redirecting...");
+      navigate("/dashboard");
+    }
+  };
 
   const loadExams = async () => {
     const { data } = await supabase

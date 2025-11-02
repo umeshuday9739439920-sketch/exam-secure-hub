@@ -34,6 +34,7 @@ const Auth = () => {
       return;
     }
 
+    const startTime = Date.now();
     const { error } = await supabase.auth.signUp({
       email: validation.data.email,
       password: validation.data.password,
@@ -42,6 +43,13 @@ const Auth = () => {
         emailRedirectTo: `${window.location.origin}/`,
       },
     });
+
+    // Add artificial delay to prevent timing attacks (normalize to ~800ms minimum)
+    const elapsed = Date.now() - startTime;
+    const minDelay = 800;
+    if (elapsed < minDelay) {
+      await new Promise(resolve => setTimeout(resolve, minDelay - elapsed));
+    }
 
     setIsLoading(false);
 
@@ -72,10 +80,18 @@ const Auth = () => {
       return;
     }
 
+    const startTime = Date.now();
     const { error } = await supabase.auth.signInWithPassword({
       email: validation.data.email,
       password: validation.data.password,
     });
+
+    // Add artificial delay to prevent timing attacks (normalize to ~800ms minimum)
+    const elapsed = Date.now() - startTime;
+    const minDelay = 800;
+    if (elapsed < minDelay) {
+      await new Promise(resolve => setTimeout(resolve, minDelay - elapsed));
+    }
 
     setIsLoading(false);
 

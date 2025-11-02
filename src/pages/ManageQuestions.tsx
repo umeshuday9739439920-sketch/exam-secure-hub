@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, Plus, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { questionSchema } from "@/lib/validations";
 
@@ -28,6 +30,7 @@ const ManageQuestions = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [examTitle, setExamTitle] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showCorrectAnswers, setShowCorrectAnswers] = useState(false);
 
   useEffect(() => {
     loadExam();
@@ -123,6 +126,27 @@ const ManageQuestions = () => {
           <h1 className="text-2xl font-bold">{examTitle} - Manage Questions</h1>
         </div>
 
+        <Alert className="mb-6">
+          <AlertDescription>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {showCorrectAnswers ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                <span className="font-medium">
+                  Correct answers are currently {showCorrectAnswers ? "visible" : "hidden"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="show-answers">Show Correct Answers</Label>
+                <Switch 
+                  id="show-answers"
+                  checked={showCorrectAnswers}
+                  onCheckedChange={setShowCorrectAnswers}
+                />
+              </div>
+            </div>
+          </AlertDescription>
+        </Alert>
+
         <Card className="mb-6">
           <CardHeader>
             <div className="flex justify-between items-center">
@@ -215,16 +239,16 @@ const ManageQuestions = () => {
                     </h3>
                     <p className="text-foreground mb-3">{question.question_text}</p>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className={question.correct_answer === "A" ? "text-accent font-semibold" : ""}>
+                      <div className={showCorrectAnswers && question.correct_answer === "A" ? "text-accent font-semibold" : ""}>
                         A. {question.option_a}
                       </div>
-                      <div className={question.correct_answer === "B" ? "text-accent font-semibold" : ""}>
+                      <div className={showCorrectAnswers && question.correct_answer === "B" ? "text-accent font-semibold" : ""}>
                         B. {question.option_b}
                       </div>
-                      <div className={question.correct_answer === "C" ? "text-accent font-semibold" : ""}>
+                      <div className={showCorrectAnswers && question.correct_answer === "C" ? "text-accent font-semibold" : ""}>
                         C. {question.option_c}
                       </div>
-                      <div className={question.correct_answer === "D" ? "text-accent font-semibold" : ""}>
+                      <div className={showCorrectAnswers && question.correct_answer === "D" ? "text-accent font-semibold" : ""}>
                         D. {question.option_d}
                       </div>
                     </div>
