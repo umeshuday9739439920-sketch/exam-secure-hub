@@ -17,7 +17,6 @@ interface Question {
   option_b: string;
   option_c: string;
   option_d: string;
-  correct_answer: string;
   marks: number;
 }
 
@@ -106,10 +105,10 @@ const ExamPage = () => {
     setDuration(exam.duration_minutes * 60);
     setTimeLeft(exam.duration_minutes * 60);
 
-    // Load questions
+    // Load questions WITHOUT correct_answer field to prevent cheating
     const { data: questionsData } = await supabase
       .from("questions")
-      .select("*")
+      .select("id, question_text, option_a, option_b, option_c, option_d, marks")
       .eq("exam_id", examId);
 
     if (questionsData) {
@@ -144,17 +143,34 @@ const ExamPage = () => {
   const submitExam = useCallback(async () => {
     if (!attemptId) return;
 
-    let score = 0;
-    const answerInserts = questions.map(q => {
-      const selectedAnswer = answers[q.id];
-      const isCorrect = selectedAnswer === q.correct_answer;
-      if (isCorrect) score += q.marks;
+    // Check answers using secure server-side function
+    const answerChecks = await Promise.all(
+      questions.map(async (q) => {
+        const selectedAnswer = answers[q.id];
+        if (!selectedAnswer) return { questionId: q.id, isCorrect: false, marks: 0 };
+        
+        const { data: isCorrect } = await supabase.rpc('check_answer', {
+          _question_id: q.id,
+          _selected_answer: selectedAnswer,
+        });
 
+        return {
+          questionId: q.id,
+          isCorrect: isCorrect || false,
+          marks: isCorrect ? q.marks : 0,
+        };
+      })
+    );
+
+    let score = 0;
+    const answerInserts = answerChecks.map((check) => {
+      if (check.isCorrect) score += check.marks;
+      
       return {
         attempt_id: attemptId,
-        question_id: q.id,
-        selected_answer: selectedAnswer || null,
-        is_correct: isCorrect,
+        question_id: check.questionId,
+        selected_answer: answers[check.questionId] || null,
+        is_correct: check.isCorrect,
       };
     });
 

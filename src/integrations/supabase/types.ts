@@ -253,6 +253,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_answer: {
+        Args: { _question_id: string; _selected_answer: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

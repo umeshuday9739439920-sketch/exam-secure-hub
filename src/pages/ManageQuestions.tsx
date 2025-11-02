@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { questionSchema } from "@/lib/validations";
 
 interface Question {
   id: string;
@@ -57,15 +58,34 @@ const ManageQuestions = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
-    const { error } = await supabase.from("questions").insert({
-      exam_id: examId,
+    // Validate input
+    const rawData = {
       question_text: formData.get("question") as string,
       option_a: formData.get("option_a") as string,
       option_b: formData.get("option_b") as string,
       option_c: formData.get("option_c") as string,
       option_d: formData.get("option_d") as string,
-      correct_answer: formData.get("correct_answer") as string,
+      correct_answer: formData.get("correct_answer") as "A" | "B" | "C" | "D",
       marks: parseInt(formData.get("marks") as string),
+    };
+
+    const validation = questionSchema.safeParse(rawData);
+    
+    if (!validation.success) {
+      const errors = validation.error.errors.map(err => err.message).join(", ");
+      toast.error(errors);
+      return;
+    }
+
+    const { error } = await supabase.from("questions").insert({
+      exam_id: examId,
+      question_text: validation.data.question_text,
+      option_a: validation.data.option_a,
+      option_b: validation.data.option_b,
+      option_c: validation.data.option_c,
+      option_d: validation.data.option_d,
+      correct_answer: validation.data.correct_answer,
+      marks: validation.data.marks,
     });
 
     if (error) {
@@ -124,24 +144,25 @@ const ManageQuestions = () => {
                     required
                     placeholder="Enter your question"
                     rows={3}
+                    maxLength={1000}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="option_a">Option A</Label>
-                    <Input id="option_a" name="option_a" required />
+                    <Input id="option_a" name="option_a" required maxLength={500} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="option_b">Option B</Label>
-                    <Input id="option_b" name="option_b" required />
+                    <Input id="option_b" name="option_b" required maxLength={500} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="option_c">Option C</Label>
-                    <Input id="option_c" name="option_c" required />
+                    <Input id="option_c" name="option_c" required maxLength={500} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="option_d">Option D</Label>
-                    <Input id="option_d" name="option_d" required />
+                    <Input id="option_d" name="option_d" required maxLength={500} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -167,6 +188,7 @@ const ManageQuestions = () => {
                       type="number"
                       required
                       min="1"
+                      max="100"
                       defaultValue="1"
                     />
                   </div>

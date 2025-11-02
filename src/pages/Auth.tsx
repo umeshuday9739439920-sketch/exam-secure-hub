@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { GraduationCap } from "lucide-react";
+import { signUpSchema, signInSchema } from "@/lib/validations";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,15 +19,26 @@ const Auth = () => {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("signup-email") as string;
-    const password = formData.get("signup-password") as string;
-    const fullName = formData.get("full-name") as string;
+    const rawData = {
+      email: formData.get("signup-email") as string,
+      password: formData.get("signup-password") as string,
+      full_name: formData.get("full-name") as string,
+    };
+
+    const validation = signUpSchema.safeParse(rawData);
+    
+    if (!validation.success) {
+      const errors = validation.error.errors.map(err => err.message).join(", ");
+      toast.error(errors);
+      setIsLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.signUp({
-      email,
-      password,
+      email: validation.data.email,
+      password: validation.data.password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: validation.data.full_name },
         emailRedirectTo: `${window.location.origin}/`,
       },
     });
@@ -34,7 +46,7 @@ const Auth = () => {
     setIsLoading(false);
 
     if (error) {
-      toast.error(error.message);
+      toast.error("Invalid email or password");
     } else {
       toast.success("Account created successfully!");
       navigate("/dashboard");
@@ -46,18 +58,29 @@ const Auth = () => {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("signin-email") as string;
-    const password = formData.get("signin-password") as string;
+    const rawData = {
+      email: formData.get("signin-email") as string,
+      password: formData.get("signin-password") as string,
+    };
+
+    const validation = signInSchema.safeParse(rawData);
+    
+    if (!validation.success) {
+      const errors = validation.error.errors.map(err => err.message).join(", ");
+      toast.error(errors);
+      setIsLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: validation.data.email,
+      password: validation.data.password,
     });
 
     setIsLoading(false);
 
     if (error) {
-      toast.error(error.message);
+      toast.error("Invalid email or password");
     } else {
       toast.success("Signed in successfully!");
       navigate("/dashboard");
@@ -118,6 +141,7 @@ const Auth = () => {
                     type="text"
                     placeholder="John Doe"
                     required
+                    maxLength={100}
                   />
                 </div>
                 <div className="space-y-2">
@@ -137,8 +161,12 @@ const Auth = () => {
                     name="signup-password"
                     type="password"
                     required
-                    minLength={6}
+                    minLength={8}
+                    maxLength={128}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Must be 8+ characters with uppercase, lowercase, and number
+                  </p>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Creating account..." : "Create Account"}

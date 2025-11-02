@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { examSchema } from "@/lib/validations";
 
 interface CreateExamDialogProps {
   open: boolean;
@@ -35,12 +36,30 @@ const CreateExamDialog = ({ open, onOpenChange, onSuccess }: CreateExamDialogPro
       return;
     }
 
-    const { error } = await supabase.from("exams").insert({
+    // Validate input
+    const rawData = {
       title: formData.get("title") as string,
-      description: formData.get("description") as string,
-      duration_minutes: parseInt(formData.get("duration") as string),
+      description: formData.get("description") as string || "",
+      duration: parseInt(formData.get("duration") as string),
       total_marks: parseInt(formData.get("total_marks") as string),
       passing_marks: parseInt(formData.get("passing_marks") as string),
+    };
+
+    const validation = examSchema.safeParse(rawData);
+    
+    if (!validation.success) {
+      const errors = validation.error.errors.map(err => err.message).join(", ");
+      toast.error(errors);
+      setIsLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.from("exams").insert({
+      title: validation.data.title,
+      description: validation.data.description,
+      duration_minutes: validation.data.duration,
+      total_marks: validation.data.total_marks,
+      passing_marks: validation.data.passing_marks,
       created_by: user.id,
     });
 
@@ -66,7 +85,7 @@ const CreateExamDialog = ({ open, onOpenChange, onSuccess }: CreateExamDialogPro
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Exam Title</Label>
-            <Input id="title" name="title" required placeholder="e.g., Mathematics Final Exam" />
+            <Input id="title" name="title" required placeholder="e.g., Mathematics Final Exam" maxLength={200} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
@@ -75,6 +94,7 @@ const CreateExamDialog = ({ open, onOpenChange, onSuccess }: CreateExamDialogPro
               name="description"
               placeholder="Brief description of the exam"
               rows={3}
+              maxLength={1000}
             />
           </div>
           <div className="grid grid-cols-3 gap-4">
@@ -86,6 +106,7 @@ const CreateExamDialog = ({ open, onOpenChange, onSuccess }: CreateExamDialogPro
                 type="number"
                 required
                 min="1"
+                max="300"
                 placeholder="60"
               />
             </div>
