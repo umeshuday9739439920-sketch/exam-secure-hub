@@ -114,10 +114,7 @@ const ExamResults = () => {
                             <User className="w-5 h-5 text-primary-foreground" />
                           </div>
                           <div className="flex-1">
-                            <h3 className="font-semibold">{result.profile.full_name}</h3>
-                            <p className="text-sm text-muted-foreground mb-2">
-                              {result.profile.email}
-                            </p>
+                            <h3 className="font-semibold mb-2">{result.profile.full_name}</h3>
                             <div className="flex items-center gap-4 text-sm">
                               <span>
                                 Score: {result.score} / {result.total_marks}
