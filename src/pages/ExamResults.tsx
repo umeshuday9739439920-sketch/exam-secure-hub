@@ -16,7 +16,6 @@ interface Result {
   started_at: string;
   profile: {
     full_name: string;
-    email: string;
   };
 }
 
@@ -41,7 +40,7 @@ const ExamResults = () => {
 
     const { data } = await supabase
       .from("exam_attempts")
-      .select("*, profile:profiles(full_name, email)")
+      .select("*, profile:profiles(full_name)")
       .eq("exam_id", examId)
       .order("percentage", { ascending: false });
 
