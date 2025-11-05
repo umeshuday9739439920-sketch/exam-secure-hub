@@ -5,7 +5,7 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Plus, BookOpen, Users, FileText, BarChart } from "lucide-react";
+import { LogOut, Plus, BookOpen, Users, FileText, BarChart, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import CreateExamDialog from "@/components/admin/CreateExamDialog";
 
@@ -97,6 +97,24 @@ const AdminDashboard = ({ user }: { user: User }) => {
       toast.error("Failed to update exam status");
     } else {
       toast.success(`Exam ${!currentStatus ? "activated" : "deactivated"}`);
+      loadExams();
+    }
+  };
+
+  const deleteExam = async (examId: string) => {
+    if (!confirm("Are you sure you want to delete this exam? This will also delete all questions and attempts.")) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from("exams")
+      .delete()
+      .eq("id", examId);
+
+    if (error) {
+      toast.error("Failed to delete exam");
+    } else {
+      toast.success("Exam deleted successfully");
       loadExams();
     }
   };
@@ -215,6 +233,16 @@ const AdminDashboard = ({ user }: { user: User }) => {
                       >
                         View Results
                       </Button>
+                      {!exam.is_active && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteExam(exam.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
