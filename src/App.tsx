@@ -16,6 +16,7 @@ import StudentsManagement from "./pages/admin/StudentsManagement";
 import ExamsManagement from "./pages/admin/ExamsManagement";
 import Analytics from "./pages/admin/Analytics";
 import AdminSettings from "./pages/admin/AdminSettings";
+import GradeExam from "./pages/admin/GradeExam";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="settings" element={<AdminSettings />} />
             <Route path="exam/:examId" element={<ManageQuestions />} />
             <Route path="results/:examId" element={<ExamResults />} />
+            <Route path="grade/:attemptId" element={<GradeExam />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

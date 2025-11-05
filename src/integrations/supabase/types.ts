@@ -17,24 +17,39 @@ export type Database = {
       answers: {
         Row: {
           attempt_id: string
+          awarded_marks: number | null
+          graded_at: string | null
+          graded_by: string | null
           id: string
           is_correct: boolean | null
+          is_graded: boolean | null
           question_id: string
           selected_answer: string | null
+          text_answer: string | null
         }
         Insert: {
           attempt_id: string
+          awarded_marks?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
           id?: string
           is_correct?: boolean | null
+          is_graded?: boolean | null
           question_id: string
           selected_answer?: string | null
+          text_answer?: string | null
         }
         Update: {
           attempt_id?: string
+          awarded_marks?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
           id?: string
           is_correct?: boolean | null
+          is_graded?: boolean | null
           question_id?: string
           selected_answer?: string | null
+          text_answer?: string | null
         }
         Relationships: [
           {
@@ -56,9 +71,11 @@ export type Database = {
       exam_attempts: {
         Row: {
           exam_id: string
+          grading_completed: boolean | null
           id: string
           passed: boolean | null
           percentage: number | null
+          requires_grading: boolean | null
           score: number | null
           started_at: string | null
           student_id: string
@@ -68,9 +85,11 @@ export type Database = {
         }
         Insert: {
           exam_id: string
+          grading_completed?: boolean | null
           id?: string
           passed?: boolean | null
           percentage?: number | null
+          requires_grading?: boolean | null
           score?: number | null
           started_at?: string | null
           student_id: string
@@ -80,9 +99,11 @@ export type Database = {
         }
         Update: {
           exam_id?: string
+          grading_completed?: boolean | null
           id?: string
           passed?: boolean | null
           percentage?: number | null
+          requires_grading?: boolean | null
           score?: number | null
           started_at?: string | null
           student_id?: string
@@ -174,40 +195,43 @@ export type Database = {
       }
       questions: {
         Row: {
-          correct_answer: string
+          correct_answer: string | null
           created_at: string | null
           exam_id: string
           id: string
           marks: number
-          option_a: string
-          option_b: string
-          option_c: string
-          option_d: string
+          option_a: string | null
+          option_b: string | null
+          option_c: string | null
+          option_d: string | null
           question_text: string
+          question_type: Database["public"]["Enums"]["question_type"]
         }
         Insert: {
-          correct_answer: string
+          correct_answer?: string | null
           created_at?: string | null
           exam_id: string
           id?: string
           marks?: number
-          option_a: string
-          option_b: string
-          option_c: string
-          option_d: string
+          option_a?: string | null
+          option_b?: string | null
+          option_c?: string | null
+          option_d?: string | null
           question_text: string
+          question_type?: Database["public"]["Enums"]["question_type"]
         }
         Update: {
-          correct_answer?: string
+          correct_answer?: string | null
           created_at?: string | null
           exam_id?: string
           id?: string
           marks?: number
-          option_a?: string
-          option_b?: string
-          option_c?: string
-          option_d?: string
+          option_a?: string | null
+          option_b?: string | null
+          option_c?: string | null
+          option_d?: string | null
           question_text?: string
+          question_type?: Database["public"]["Enums"]["question_type"]
         }
         Relationships: [
           {
@@ -267,6 +291,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "student"
+      question_type: "mcq" | "long_text"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -395,6 +420,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "student"],
+      question_type: ["mcq", "long_text"],
     },
   },
 } as const
