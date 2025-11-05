@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { PlusCircle, Settings, BarChart, Clock } from "lucide-react";
+import { PlusCircle, Settings, BarChart, Clock, Trash2 } from "lucide-react";
 import CreateExamDialog from "@/components/admin/CreateExamDialog";
 import { useToast } from "@/hooks/use-toast";
 
@@ -56,6 +56,31 @@ export default function ExamsManagement() {
       toast({
         title: "Success",
         description: `Exam ${!currentStatus ? "activated" : "deactivated"}`,
+      });
+      loadExams();
+    }
+  };
+
+  const deleteExam = async (examId: string) => {
+    if (!confirm("Are you sure you want to delete this exam? This will also delete all questions and attempts.")) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from("exams")
+      .delete()
+      .eq("id", examId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete exam",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Exam deleted successfully",
       });
       loadExams();
     }
@@ -150,6 +175,16 @@ export default function ExamsManagement() {
                       <BarChart className="h-4 w-4 mr-2" />
                       View Results
                     </Button>
+                    {!exam.is_active && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deleteExam(exam.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
