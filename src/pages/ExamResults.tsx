@@ -42,13 +42,14 @@ const ExamResults = () => {
       .from("exam_attempts")
       .select("*, profile:profiles(full_name)")
       .eq("exam_id", examId)
+      .not("submitted_at", "is", null) // Only show completed attempts
       .order("percentage", { ascending: false });
 
     if (data) setResults(data as any);
   };
 
   const averageScore = results.length > 0
-    ? results.reduce((sum, r) => sum + r.percentage, 0) / results.length
+    ? results.reduce((sum, r) => sum + (r.percentage ?? 0), 0) / results.length
     : 0;
 
   const passedCount = results.filter(r => r.passed).length;
@@ -116,10 +117,10 @@ const ExamResults = () => {
                             <h3 className="font-semibold mb-2">{result.profile.full_name}</h3>
                             <div className="flex items-center gap-4 text-sm">
                               <span>
-                                Score: {result.score} / {result.total_marks}
+                                Score: {result.score ?? 0} / {result.total_marks}
                               </span>
                               <Badge variant={result.passed ? "default" : "destructive"}>
-                                {result.percentage.toFixed(1)}%
+                                {result.percentage?.toFixed(1) ?? 0}%
                               </Badge>
                               {result.tab_switches > 0 && (
                                 <Badge variant="outline" className="flex items-center gap-1">
