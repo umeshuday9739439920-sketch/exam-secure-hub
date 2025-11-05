@@ -52,6 +52,7 @@ const StudentDashboard = ({ user }: { user: User }) => {
       .from("exam_attempts")
       .select("*, exam:exams(title)")
       .eq("student_id", user.id)
+      .not("submitted_at", "is", null) // Only show completed attempts
       .order("started_at", { ascending: false });
 
     if (data) setAttempts(data as any);
@@ -160,11 +161,11 @@ const StudentDashboard = ({ user }: { user: User }) => {
                         <div>
                           <h3 className="font-semibold">{attempt.exam.title}</h3>
                           <p className="text-sm text-muted-foreground mt-1">
-                            Score: {attempt.score} / {attempt.total_marks}
+                            Score: {attempt.score ?? 0} / {attempt.total_marks}
                           </p>
                         </div>
                         <Badge variant={attempt.passed ? "default" : "destructive"}>
-                          {attempt.percentage.toFixed(1)}%
+                          {attempt.percentage?.toFixed(1) ?? 0}%
                         </Badge>
                       </div>
                       <Badge variant={attempt.passed ? "default" : "secondary"}>
