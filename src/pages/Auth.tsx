@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,19 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const navigate = useNavigate();
+
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecoveryMode(true);
+        setShowResetPassword(false);
+        toast.message('Enter your new password');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -125,6 +138,38 @@ const Auth = () => {
     }
   };
 
+  const handleUpdatePassword = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const newPassword = formData.get("new-password") as string;
+    const confirmPassword = formData.get("confirm-password") as string;
+
+    if (!newPassword || newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      setIsLoading(false);
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+    setIsLoading(false);
+
+    if (error) {
+      toast.error("Failed to update password");
+    } else {
+      toast.success("Password updated! You are now signed in.");
+      setIsRecoveryMode(false);
+      navigate("/dashboard");
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary to-background p-4">
       <Card className="w-full max-w-md shadow-lg">
@@ -143,64 +188,80 @@ const Auth = () => {
             </TabsList>
 
             <TabsContent value="signin">
-              {!showResetPassword ? (
-                <form onSubmit={handleSignIn} className="space-y-4">
+              {isRecoveryMode ? (
+                <form onSubmit={handleUpdatePassword} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
-                    <Input
-                      id="signin-email"
-                      name="signin-email"
-                      type="email"
-                      placeholder="student@example.com"
-                      required
-                    />
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input id="new-password" name="new-password" type="password" required minLength={8} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
-                    <Input
-                      id="signin-password"
-                      name="signin-password"
-                      type="password"
-                      required
-                    />
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <Input id="confirm-password" name="confirm-password" type="password" required minLength={8} />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Signing in..." : "Sign In"}
+                    {isLoading ? "Updating..." : "Update Password"}
                   </Button>
-                  <button
-                    type="button"
-                    onClick={() => setShowResetPassword(true)}
-                    className="text-sm text-primary hover:underline w-full text-center"
-                  >
-                    Forgot password?
-                  </button>
                 </form>
               ) : (
-                <form onSubmit={handleResetPassword} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="reset-email">Email</Label>
-                    <Input
-                      id="reset-email"
-                      name="reset-email"
-                      type="email"
-                      placeholder="student@example.com"
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      We'll send you a link to reset your password
-                    </p>
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Sending..." : "Send Reset Link"}
-                  </Button>
-                  <button
-                    type="button"
-                    onClick={() => setShowResetPassword(false)}
-                    className="text-sm text-muted-foreground hover:text-foreground w-full text-center"
-                  >
-                    Back to sign in
-                  </button>
-                </form>
+                !showResetPassword ? (
+                  <form onSubmit={handleSignIn} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="signin-email">Email</Label>
+                      <Input
+                        id="signin-email"
+                        name="signin-email"
+                        type="email"
+                        placeholder="student@example.com"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signin-password">Password</Label>
+                      <Input
+                        id="signin-password"
+                        name="signin-password"
+                        type="password"
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Signing in..." : "Sign In"}
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => setShowResetPassword(true)}
+                      className="text-sm text-primary hover:underline w-full text-center"
+                    >
+                      Forgot password?
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleResetPassword} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="reset-email">Email</Label>
+                      <Input
+                        id="reset-email"
+                        name="reset-email"
+                        type="email"
+                        placeholder="student@example.com"
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        We'll send you a link to reset your password
+                      </p>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Sending..." : "Send Reset Link"}
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => setShowResetPassword(false)}
+                      className="text-sm text-muted-foreground hover:text-foreground w-full text-center"
+                    >
+                      Back to sign in
+                    </button>
+                  </form>
+                )
               )}
             </TabsContent>
 
