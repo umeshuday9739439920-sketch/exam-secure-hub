@@ -65,21 +65,6 @@ const StudentDashboard = ({ user }: { user: User }) => {
   };
 
   const startExam = async (examId: string) => {
-    // Check if already completed
-    const existing = attempts.find(a => a.exam_id === examId);
-    if (existing) {
-      toast.error("You have already attempted this exam");
-      return;
-    }
-
-    // Clean up any incomplete attempts before starting
-    await supabase
-      .from("exam_attempts")
-      .delete()
-      .eq("student_id", user.id)
-      .eq("exam_id", examId)
-      .is("submitted_at", null);
-
     navigate(`/exam/${examId}`);
   };
 
@@ -139,9 +124,8 @@ const StudentDashboard = ({ user }: { user: User }) => {
                       <Button 
                         onClick={() => startExam(exam.id)}
                         className="w-full"
-                        disabled={attempts.some(a => a.exam_id === exam.id)}
                       >
-                        {attempts.some(a => a.exam_id === exam.id) ? "Already Attempted" : "Start Exam"}
+                        Start Exam
                       </Button>
                     </CardContent>
                   </Card>
