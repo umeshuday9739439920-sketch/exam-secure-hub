@@ -77,6 +77,16 @@ const Auth = () => {
   };
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+    const getStablePreviewUrl = () => {
+      const { hostname, protocol, pathname, search, hash } = window.location;
+      if (!hostname.startsWith("id-preview--") || !hostname.endsWith(".lovable.app")) return null;
+
+      const stableHost = hostname
+        .replace("id-preview--", "")
+        .replace(".lovable.app", ".lovableproject.com");
+
+      return `${protocol}//${stableHost}${pathname}${search}${hash}`;
+    };
     e.preventDefault();
     setIsLoading(true);
 
@@ -113,6 +123,17 @@ const Auth = () => {
     if (error) {
       const isNetworkError = /failed to fetch|network/i.test(error.message || "");
       const isInvalidCredentials = /invalid login credentials/i.test(error.message || "");
+
+      if (isNetworkError) {
+        const stablePreviewUrl = getStablePreviewUrl();
+        if (stablePreviewUrl) {
+          toast.error("Connection issue on this preview URL. Redirecting to stable preview...");
+          window.setTimeout(() => {
+            window.location.assign(stablePreviewUrl);
+          }, 1200);
+          return;
+        }
+      }
 
       toast.error(
         isNetworkError
