@@ -68,7 +68,8 @@ const Auth = () => {
     setIsLoading(false);
 
     if (error) {
-      toast.error("Invalid email or password");
+      const isNetworkError = /failed to fetch|network/i.test(error.message || "");
+      toast.error(isNetworkError ? "Can't reach authentication service. Check your connection and try again." : error.message || "Sign up failed");
     } else {
       toast.success("Account created successfully!");
       navigate("/dashboard");
@@ -110,7 +111,16 @@ const Auth = () => {
     setIsLoading(false);
 
     if (error) {
-      toast.error("Invalid email or password");
+      const isNetworkError = /failed to fetch|network/i.test(error.message || "");
+      const isInvalidCredentials = /invalid login credentials/i.test(error.message || "");
+
+      toast.error(
+        isNetworkError
+          ? "Can't reach authentication service. Check your connection and try again."
+          : isInvalidCredentials
+            ? "Invalid email or password"
+            : (error.message || "Sign in failed")
+      );
     } else {
       toast.success("Signed in successfully!");
       navigate("/dashboard");
