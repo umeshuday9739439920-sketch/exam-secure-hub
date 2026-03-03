@@ -11,8 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Simple security check - only allow this specific request
-    const { email, password, secret } = await req.json()
+    const { password, secret, deleteUserIds } = await req.json()
 
     if (secret !== 'temp-reset-2025') {
       throw new Error('Unauthorized')
@@ -24,20 +23,24 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
-    if (!email || !password) {
-      throw new Error('Email and password are required')
+    // Delete users if requested
+    if (deleteUserIds && Array.isArray(deleteUserIds)) {
+      for (const uid of deleteUserIds) {
+        await supabaseAdmin.auth.admin.deleteUser(uid)
+      }
     }
 
-    // Update user password using admin API
-    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
-      '560f29d4-b254-409a-b64c-8cc7418a0e9a',
-      { password }
-    )
-
-    if (error) throw error
+    // Update admin password
+    if (password) {
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(
+        '560f29d4-b254-409a-b64c-8cc7418a0e9a',
+        { password }
+      )
+      if (error) throw error
+    }
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Password updated successfully' }),
+      JSON.stringify({ success: true, message: 'Done' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
